@@ -118,7 +118,8 @@ namespace AuthPack
         {
             string ret = null;
 
-            string response = oAuthWebRequest(Method.GET, REQUEST_TOKEN, String.Empty);
+            string response;
+            oAuthWebRequest(Method.GET, REQUEST_TOKEN, String.Empty, out response);
             if (response.Length > 0)
             {
                 //response contains token and token secret.  We only need the token.
@@ -150,7 +151,8 @@ namespace AuthPack
             this.Token = authToken;
             this.OAuthVerifier = oauthVerifier;
 
-            string response = oAuthWebRequest(Method.POST, ACCESS_TOKEN, String.Empty);
+            string response;
+            oAuthWebRequest(Method.POST, ACCESS_TOKEN, String.Empty, out response);
 
             if (response.Length > 0)
             {
@@ -174,12 +176,11 @@ namespace AuthPack
         /// <param name="url">The full url, including the querystring.</param>
         /// <param name="postData">Data to post (querystring format)</param>
         /// <returns>The web server response.</returns>
-        public string oAuthWebRequest(Method method, string url, string postData)
+        public int oAuthWebRequest(Method method, string url, string postData, out string response)
         {
             string outUrl = "";
             string querystring = "";
-            string ret = "";
-
+            response = "";
 
             //Setup postData for signing.
             //Add the postData to the querystring.
@@ -246,9 +247,9 @@ namespace AuthPack
                 outUrl += "?";
             }
 
-            ret = AuthUtilities.WebRequest((AuthUtilities.Method) method, outUrl + querystring, postData);
+            int status = AuthUtilities.WebRequest((AuthUtilities.Method) method, outUrl + querystring, postData, out response);
 
-            return ret;
+            return status;
         }
     }
 

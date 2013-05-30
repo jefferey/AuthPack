@@ -86,13 +86,14 @@ namespace AuthPack
         {
             string url = OAUTH_ACCESS_TOKEN;
 
-            string json = AuthUtilities.WebRequest(AuthUtilities.Method.POST, url,
+            string json;
+            AuthUtilities.WebRequest(AuthUtilities.Method.POST, url,
                   "client_id=" + HttpUtility.UrlEncode(ConfigurationManager.AppSettings["appdotnet_clientid"].ToString())
                 + "&client_secret=" + HttpUtility.UrlEncode(ConfigurationManager.AppSettings["appdotnet_clientsecret"].ToString())
                 + "&grant_type=authorization_code"
                 + "&redirect_uri=" + HttpUtility.UrlEncode(returl)
-                + "&code=" + HttpUtility.UrlEncode(code)
-                );
+                + "&code=" + HttpUtility.UrlEncode(code),
+                out json);
             AppDotNetAccessToken token = Json.Deserialise<AppDotNetAccessToken>(json);
             this.access_token = token.access_token;
         }

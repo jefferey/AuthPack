@@ -27,13 +27,14 @@ namespace AuthPack
                 code_or_refresh_token = "refresh_token=" + System.Web.HttpUtility.UrlEncode(refresh_token);
             }
 
-            string json = AuthUtilities.WebRequest(AuthUtilities.Method.POST, "https://accounts.google.com/o/oauth2/token",
+            string json;
+            AuthUtilities.WebRequest(AuthUtilities.Method.POST, "https://accounts.google.com/o/oauth2/token",
                 code_or_refresh_token
                 + "&client_id=" + ConfigurationManager.AppSettings["google_clientid"].ToString()
                 + "&client_secret=" + ConfigurationManager.AppSettings["google_clientsecret"].ToString()
                 + "&redirect_uri=" + System.Web.HttpUtility.UrlEncode(returl)
-                + "&grant_type=" + grant_type
-                );
+                + "&grant_type=" + grant_type,
+                out json);
             return Json.Deserialise<GoogleTokens>(json);
         }
     }

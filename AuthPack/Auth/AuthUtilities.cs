@@ -24,9 +24,9 @@ namespace AuthPack
         /// <param name="url">Full url to the web resource</param>
         /// <param name="postData">Data to post in querystring format</param>
         /// <returns>The web server response.</returns>
-        public static string WebRequest(Method method, string url, string postData)
+        public static int WebRequest(Method method, string url, string postData, out string response)
         {
-            return WebRequest(method, url, postData, null);
+            return WebRequest(method, url, postData, out response, null);
         }
 
 
@@ -38,11 +38,11 @@ namespace AuthPack
         /// <param name="postData">Data to post in querystring format</param>
         /// <param name="headers">Additional Header Data</param>
         /// <returns>The web server response.</returns>
-        public static string WebRequest(Method method, string url, string postData, List<KeyValuePair<string,string>> headers)
+        public static int WebRequest(Method method, string url, string postData, out string response, List<KeyValuePair<string,string>> headers)
         {
             HttpWebRequest webRequest = null;
             StreamWriter requestWriter = null;
-            string responseData = "";
+            response = "";
 
             webRequest = System.Net.WebRequest.Create(url) as HttpWebRequest;
             if(headers != null)
@@ -69,11 +69,11 @@ namespace AuthPack
                 }
             }
 
-            responseData = WebResponseGet(webRequest);
+            int status = WebResponseGet(webRequest, out response);
 
             webRequest = null;
 
-            return responseData;
+            return status;
 
         }
 
@@ -82,15 +82,18 @@ namespace AuthPack
         /// </summary>
         /// <param name="webRequest">The request object.</param>
         /// <returns>The response data.</returns>
-        public static string WebResponseGet(HttpWebRequest webRequest)
+        public static int WebResponseGet(HttpWebRequest webRequest, out string response)
         {
             StreamReader responseReader = null;
-            string responseData = "";
+            response = "";
+            int status = -1;
 
             try
             {
-                responseReader = new StreamReader(webRequest.GetResponse().GetResponseStream());
-                responseData = responseReader.ReadToEnd();
+                HttpWebResponse httpResponse = (HttpWebResponse)webRequest.GetResponse();
+                responseReader = new StreamReader(httpResponse.GetResponseStream());
+                status = (int)httpResponse.StatusCode;
+                response = responseReader.ReadToEnd();
             }
             catch (WebException ex)
             {
@@ -101,7 +104,7 @@ namespace AuthPack
                     string innerResponseData = responseReader.ReadToEnd();
                     if (innerResponseData.Trim().Length > 0)
                     {
-                        responseData = innerResponseData;
+                        response = innerResponseData;
                     }
                 }
 
@@ -118,12 +121,12 @@ namespace AuthPack
                     catch { }
                 }
 
-                throw new Exception(responseData);
+                throw new Exception(response);
             }
             catch (Exception ex)
             {
                 //TODO: Improve error handling
-                responseData = ex.Message;
+                response = ex.Message;
 
                 if (responseReader != null)
                 {
@@ -143,7 +146,7 @@ namespace AuthPack
             responseReader = null;
             webRequest = null;
 
-            return responseData;
+            return status;
         }
     }
 

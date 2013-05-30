@@ -70,7 +70,9 @@ namespace AuthPack
 
                     //SAMPLE TWITTER API CALL
                     string url = "http://api.twitter.com/1/account/verify_credentials.json";
-                    TwitterUser user = Json.Deserialise<TwitterUser>(oAuth.oAuthWebRequest(oAuthTwitter.Method.GET, url, String.Empty));
+                    string response;
+                    oAuth.oAuthWebRequest(oAuthTwitter.Method.GET, url, String.Empty, out response);
+                    TwitterUser user = Json.Deserialise<TwitterUser>(response);
 
                     if (user.id.Length > 0)
                     {
@@ -115,7 +117,9 @@ namespace AuthPack
                 //Set the access token in the header.  It expires, so prepare to use the refresh token to get a new access token (not shown).
                 List<KeyValuePair<string, string>> headers = new List<KeyValuePair<string, string>>() { new KeyValuePair<string, string>("Authorization", "OAuth " + tokens.access_token) };
                 string url = "https://www.googleapis.com/userinfo/email?alt=json";
-                GoogleData user = Json.Deserialise<GoogleData>(AuthUtilities.WebRequest(AuthUtilities.Method.GET, url,"", headers));
+                string response;
+                AuthUtilities.WebRequest(AuthUtilities.Method.GET, url, "", out response, headers);
+                GoogleData user = Json.Deserialise<GoogleData>(response);
 
                 if (user.data != null && user.data.email.Length > 0)
                 {
@@ -142,7 +146,9 @@ namespace AuthPack
 
                 //Get the Access Token
                 string url = "https://graph.facebook.com/oauth/access_token?client_id=" + Server.UrlEncode(ConfigurationManager.AppSettings["facebook_appid"].ToString()) + "&redirect_uri=&client_secret=" + Server.UrlEncode(ConfigurationManager.AppSettings["facebook_appsecret"].ToString()) + "&code=" + Server.UrlEncode(req.code);
-                NameValueCollection ret = HttpUtility.ParseQueryString(AuthUtilities.WebRequest(AuthUtilities.Method.GET, url, ""));
+                string response;
+                AuthUtilities.WebRequest(AuthUtilities.Method.GET, url, "", out response);
+                NameValueCollection ret = HttpUtility.ParseQueryString(response);
 
                 string access_token = "";
                 foreach (string key in ret.Keys)
@@ -159,7 +165,8 @@ namespace AuthPack
                 //SAMPLE FACEBOOK API CALL
                 url = "https://graph.facebook.com/me?access_token=%%access_token%%";
                 url = url.Replace("%%access_token%%", access_token);
-                FacebookMe fb_me = Json.Deserialise<FacebookMe>(AuthUtilities.WebRequest(AuthUtilities.Method.GET, url, ""));
+                AuthUtilities.WebRequest(AuthUtilities.Method.GET, url, "", out response);
+                FacebookMe fb_me = Json.Deserialise<FacebookMe>(response);
 
                 //Validation -- uid and accesstoken reference same id.
                 if (req.user_id == fb_me.id)
@@ -205,7 +212,9 @@ namespace AuthPack
                 //Retrieve the access token.
                 if (sig == cookie.signature)
                 {
-                    string response = oAuthLi.oAuthWebRequest(oAuthLinkedIn.Method.POST, oAuthLi.ACCESS_TOKEN + "?xoauth_oauth2_access_token=" + oAuthLi.UrlEncode(cookie.access_token), "");
+                    string response;
+                    oAuthLi.oAuthWebRequest(oAuthLinkedIn.Method.POST, oAuthLi.ACCESS_TOKEN + "?xoauth_oauth2_access_token=" + oAuthLi.UrlEncode(cookie.access_token), "", out response);
+
                     string[] tokens = response.Split('&');
                     string token = tokens[0].Split('=')[1];
                     string token_secret = tokens[1].Split('=')[1];
@@ -221,7 +230,8 @@ namespace AuthPack
                     + ",last-name"
                     + ")";
                     url = url.Replace("%%id%%", cookie.member_id);
-                    string xml = oAuthLi.oAuthWebRequest(oAuthLinkedIn.Method.GET, url, "");
+                    string xml;
+                    oAuthLi.oAuthWebRequest(oAuthLinkedIn.Method.GET, url, "", out xml);
 
                     XmlDocument xmlDoc = new XmlDocument();
                     xmlDoc.LoadXml(xml);
@@ -302,8 +312,9 @@ namespace AuthPack
 
                         ////SAMPLE App.net API CALL
                         string url = AppDotNetAuth.USER.Replace("[user_id]", "me");
-                        
-                        AppDotNetUser user = Json.Deserialise<AppDotNetUserWrapper>(AuthUtilities.WebRequest(AuthUtilities.Method.GET, url, String.Empty, oAuth.AuthHeader())).data;
+                        string response;
+                        AuthUtilities.WebRequest(AuthUtilities.Method.GET, url, String.Empty, out response, oAuth.AuthHeader());
+                        AppDotNetUser user = Json.Deserialise<AppDotNetUserWrapper>(response).data;
 
                         if (user.id.Length > 0)
                         {
